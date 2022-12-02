@@ -1,6 +1,6 @@
 import socket
 from PyQt6.QtWidgets import QApplication, QMainWindow
-from client.clientUI import ClientWindow
+from clientUI import ClientWindow
 import sys
 
 HOST = 'localhost'
@@ -24,3 +24,4 @@ if __name__ == '__main__':
     print(repr(data))
 
     startGUI()
+    s.close()

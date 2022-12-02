@@ -166,7 +166,11 @@ text-decoration: underline;</string>
        <number>16</number>
       </property>
       <item>
-       <widget class="QPlainTextEdit" name="messageInput"/>
+       <widget class="QPlainTextEdit" name="messageInput">
+        <property name="plainText">
+         <string/>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QPushButton" name="sendButton">

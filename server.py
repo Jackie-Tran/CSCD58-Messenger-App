@@ -16,7 +16,11 @@ if __name__ == '__main__':
         (clientsocket, address) = serverSocket.accept()
         if clientsocket:
             print('New Connection: ', address)
-            res = clientsocket.recv(1024)
-            print(repr(res))
-            clientsocket.sendall(b'Server response!')
+            while True:
+                res = clientsocket.recv(1024)
+                if not res:
+                    break
+                print(repr(res))
+                clientsocket.sendall(b'Server response!')
+            print('Closing connection to client: ', address)
             clientsocket.close()
