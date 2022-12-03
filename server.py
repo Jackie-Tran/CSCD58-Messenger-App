@@ -17,10 +17,15 @@ if __name__ == '__main__':
         if clientsocket:
             print('New Connection: ', address)
             while True:
-                res = clientsocket.recv(1024)
-                if not res:
+                try:
+                    res = clientsocket.recv(1024)
+                    print(repr(res))
+                    if not res:
+                        break
+                    clientsocket.sendall(b'Server response!')
+                except:
+                    # TODO: check what time of error occurs when the client closes its connection
+                    print('socket error')
                     break
-                print(repr(res))
-                clientsocket.sendall(b'Server response!')
             print('Closing connection to client: ', address)
             clientsocket.close()
