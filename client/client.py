@@ -11,10 +11,6 @@ import re
 
 HOST = 'localhost'
 PORT = 8080
-LOCAL = 'jackie'
-RESOURCE = 'desktop'
-BARE_JID = LOCAL + '@' + HOST
-JID = BARE_JID + '/' + RESOURCE
 
 
 def openStream(sock: socket.socket, fromJID: str, to: str):
@@ -34,9 +30,9 @@ def closeStream(sock: socket.socket, fromJID: str, to: str):
     xml = "</stream:stream>"
 
 
-def startGUI(s: socket.socket):
+def startGUI(s: socket.socket, jid: str):
     app = QApplication(sys.argv)
-    window: QMainWindow = ClientWindow(s)
+    window: QMainWindow = ClientWindow(s, jid)
     window.show()
 
     app.exec()
@@ -80,6 +76,12 @@ def recv(s: socket.socket):
 
 if __name__ == '__main__':
     print('Starting Client Application')
+    if len(sys.argv) < 2:
+        print("missing arg")
+    LOCAL = sys.argv[1]
+    RESOURCE = 'desktop'
+    BARE_JID = LOCAL + '@' + HOST
+    JID = BARE_JID + '/' + RESOURCE
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((HOST, PORT))
 
@@ -92,5 +94,5 @@ if __name__ == '__main__':
 
     # Setup XMPP
     openStream(s, JID, HOST)
-    startGUI(s)
+    startGUI(s, JID)
     s.close()
