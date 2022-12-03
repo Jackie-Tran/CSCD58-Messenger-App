@@ -18,6 +18,11 @@ class ClientWindow(QMainWindow):
         self.chatArea: QScrollArea = self.findChild(QScrollArea, 'chatArea')
         self.setWindowTitle("CSCD58 Chat Room - " + jid)
 
+    def closeEvent(self, e: QtGui.QCloseEvent) -> None:
+        xml = "</stream:stream>"
+        self.sock.sendall(xml.encode('utf-8'))
+        super().closeEvent(e)
+
     def onSendButtonClicked(self, jid: str):
         if not self.messageInput.toPlainText():
             return

@@ -6,7 +6,7 @@ from clientUI import ClientWindow
 import sys
 from threading import Thread
 from lxml import etree
-from io import BytesIO
+from io import StringIO
 import re
 
 HOST = 'localhost'
@@ -49,7 +49,7 @@ def handleStreamResponse(sock: socket.socket, window, jid: str):
     usersList.addItem(jid + ' (You)')
 
 
-def handlePresence(sock: socket.socket, root: etree._Element, window: QMainWindow):
+def handlePresence(sock: socket.socket, root: etree._ElementTree, window: QMainWindow):
     print('handling presence')
     usersList: QListWidget = window.findChild(QListWidget, 'usersList')
     user = root.attrib['from']
@@ -72,24 +72,31 @@ def removeNameSpace(tag: str) -> str:
 
 def parseXML(sock: socket.socket, xml: bytes, window: QMainWindow, jid: str):
     parser = etree.XMLParser(encoding='utf-8', recover=True)
-    print(xml.decode('utf-8'))
-    root: etree._ElementTree = etree.parse(BytesIO(xml), parser)
+    newXml = "<root>"+xml.decode('utf-8')+"</root>"
+    print(newXml)
+    if xml.decode('utf-8') == '</stream:stream>':
+        sock.close()
+        return
+    root: etree._ElementTree = etree.parse(StringIO(newXml), parser)
     rootElement: etree._Element = root.getroot()
-    rootTag = removeNameSpace(rootElement.tag)
-    print(rootTag)
-    if rootTag == 'stream':
-        # server has responded to our stream response
-        handleStreamResponse(sock, window, jid)
-    elif rootTag == 'message':
-        print('got a message')
-    elif rootTag == 'presence':
-        handlePresence(sock, rootElement, window)
+    children = rootElement.getchildren()
+    for child in children:
+        if not type(child) is etree._Element:
+            continue
+        childTag = removeNameSpace(child.tag)
+        if childTag == 'stream':
+            # server has responded to our stream response
+            handleStreamResponse(sock, window, jid)
+        elif childTag == 'message':
+            print('got a message')
+        elif childTag == 'presence':
+            handlePresence(sock, child, window)
 
 
 def recv(s: socket.socket, window: QMainWindow, jid: str):
-    if not s:
-        return
     while True:
+        if not s or s.fileno() == -1:
+            break
         data = s.recv(1024)
         parseXML(s, data, window, jid)
         if not data:
@@ -122,4 +129,4 @@ if __name__ == '__main__':
 
     app.exec()
     # startGUI(s, JID)
-    s.close()
+    # s.close()

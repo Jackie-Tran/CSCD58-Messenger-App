@@ -47,8 +47,8 @@ def broadcastPresence(sock: socket.socket, sender: str, status: str):
         if s == sock:
             # we don't need to update the sender about its own status
             continue
-        xml = "<presence from='{fromJID}'><status>ONLINE</status></presence>".format(
-            fromJID=sender)
+        xml = "<presence from='{fromJID}'><status>{status}</status></presence>".format(
+            fromJID=sender, status=status)
         s.sendall(xml.encode('utf-8'))
 
 
@@ -65,10 +65,8 @@ def handleMessage(sock: socket.socket, root: etree._Element):
 
 def handlePresence(sock: socket.socket, root: etree._Element):
     src = root.attrib['from']
-    print(src)
     statusElement: etree._Element = root.find('status')
     status = statusElement.text
-    print(status)
     # we need to broadcast the new status to the other clients
     broadcastPresence(sock, src, status)
 
@@ -78,16 +76,49 @@ def removeNameSpace(tag: str) -> str:
     return tagRegex.search(tag).group(2)
 
 
+def sendUserList(sock: socket.socket):
+    print('sending user list')
+    for jid, s in xmlStreams:
+        if s == sock:
+            # we don't need to update the sender about its own status
+            continue
+        xml = "<presence from='{fromJID}'><status>ONLINE</status></presence>".format(
+            fromJID=jid)
+        print(xml)
+        sock.sendall(xml.encode('utf-8'))
+    xml = "<presence from='jimmy@localhost/desktop'><status>ONLINE</status></presence>"
+    sock.sendall(xml.encode('utf-8'))
+
+
+def getJIDOfSocket(sock: socket.socket):
+    for jid, s in xmlStreams:
+        if sock == s:
+            return jid
+    return None
+
+
 def parseXML(sock: socket.socket, xml: bytes):
     parser = etree.XMLParser(encoding='utf-8', recover=True)
     print(xml.decode('utf-8'))
+    if xml.decode('utf-8') == '</stream:stream>':
+        # client is closing the stream
+        broadcastPresence(sock, getJIDOfSocket(sock), 'OFFLINE')
+        # for conn in xmlStreams:
+        #     if conn[1] == sock:
+        #         xmlStreams.remove(conn)
+        #         break
+        sock.sendall(b'</stream:stream>')
+        return
     root: etree._ElementTree = etree.parse(BytesIO(xml), parser)
     rootElement: etree._Element = root.getroot()
+    print(rootElement)
     rootTag = removeNameSpace(rootElement.tag)
 
     if rootTag == 'stream':
         # client is attempting to open a xml stream
         handleStreamRequest(sock, rootElement)
+        # send users on the server
+        sendUserList(sock)
     elif rootTag == 'message':
         # client has sent a message stanza
         handleMessage(sock, rootElement)
