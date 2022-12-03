@@ -18,6 +18,7 @@ JID = BARE_JID + '/' + RESOURCE
 
 
 def openStream(sock: socket.socket, fromJID: str, to: str):
+    print('opening stream')
     xml = """<?xml version='1.0'?>
       <stream:stream
           from='{fromJID}'
@@ -46,8 +47,8 @@ def handleStreamResponse(sock: socket.socket):
 
 
 def removeNameSpace(tag: str) -> str:
-    tagRegex = re.compile(r'\}.*')
-    return tagRegex.search(tag).group()[1:]
+    tagRegex = re.compile(r'({.*})?(.*)')
+    return tagRegex.search(tag).group(2)
 
 
 def parseXML(sock: socket.socket, xml: bytes):

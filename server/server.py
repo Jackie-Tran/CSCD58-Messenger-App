@@ -1,10 +1,11 @@
 import socket
+from typing import List
 from lxml import etree
 from io import BytesIO
 import re
 from threading import Thread
 
-xmlStreams = []
+xmlStreams: List[tuple[str, socket.socket]] = []
 senderJID = ''
 
 
@@ -14,7 +15,7 @@ def handleStreamRequest(sock: socket.socket, req: etree._Element):
     if req.attrib['from'] in xmlStreams:
         print('connection already exists')
         return
-    xmlStreams.append(req.attrib['from'])
+    xmlStreams.append((req.attrib['from'], sock))
     senderJID = req.attrib['from']
     print('Created XML stream for ' + req.attrib['from'])
     xml = """<?xml version='1.0'?>
@@ -29,9 +30,31 @@ def handleStreamRequest(sock: socket.socket, req: etree._Element):
     sock.sendall(xml.encode('utf-8'))
 
 
+def broadcastMessage(sock: socket.socket, sender: str, messageBody: str):
+    # broadcast a message to the rest of the connections
+    for jid, s in xmlStreams:
+        if s == sock:
+            # we don't want to send the message back to the original sender
+            continue
+        message = "<message from='{fromJID}' to='{toJID}'><body>{messageBody}</body></message>".format(
+            fromJID=sender, toJID=jid, messageBody=messageBody)
+        s.sendall(message.encode('utf-8'))
+
+
+def handleMessage(sock: socket.socket, root: etree._Element):
+    src = root.attrib['from']
+    dest = root.attrib['to']
+    body: etree._Element = root.find('body')
+    messageText = body.text
+    # TODO: update message logs
+    # send update to rest of the connected clients
+    print(messageText)
+    broadcastMessage(sock, src, messageText)
+
+
 def removeNameSpace(tag: str) -> str:
-    tagRegex = re.compile(r'\}.*')
-    return tagRegex.search(tag).group()[1:]
+    tagRegex = re.compile(r'({.*})?(.*)')
+    return tagRegex.search(tag).group(2)
 
 
 def parseXML(sock: socket.socket, xml: bytes):
@@ -44,22 +67,21 @@ def parseXML(sock: socket.socket, xml: bytes):
     if rootTag == 'stream':
         # client is attempting to open a xml stream
         handleStreamRequest(sock, rootElement)
+    elif rootTag == 'message':
+        # client has sent a message stanza
+        handleMessage(sock, rootElement)
 
 
 def handleClientSocket(clientsocket: socket.socket, address):
     print('New Connection: ', address)
     while True:
+        data = clientsocket.recv(1024)
         try:
-            data = clientsocket.recv(1024)
-            try:
-                parseXML(clientsocket, data)
-            except etree.parseEr:
-                print('error in xml parse')
-            if not data:
-                break
-        except:
-            # TODO: check what time of error occurs when the client closes its connection
-            print('socket error')
+            parseXML(clientsocket, data)
+            print(xmlStreams)
+        except etree.parseEr:
+            print('error in xml parse')
+        if not data:
             break
     print('Closing connection to client: ', address)
     clientsocket.close()
@@ -75,6 +97,7 @@ if __name__ == '__main__':
     serverSocket.bind(('localhost', 8080))
     # become a server socket
     serverSocket.listen(5)
+    serverSocket.settimeout(10)
 
     while True:
         # accept connections from outside
@@ -87,4 +110,3 @@ if __name__ == '__main__':
             except:
                 print('Error: unable to start client socket thread')
                 clientThread.join()
-        break

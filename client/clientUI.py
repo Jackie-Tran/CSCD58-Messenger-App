@@ -19,6 +19,8 @@ class ClientWindow(QMainWindow):
     def onSendButtonClicked(self):
         if not self.messageInput.toPlainText():
             return
-        message = self.messageInput.toPlainText().strip()
+        text = self.messageInput.toPlainText().strip()
+        message = "<message from='{fromJID}' to='{toJID}'><body>{messageBody}</body></message>".format(
+            fromJID='jackie@localhost/desktop', toJID='localhost', messageBody=text)
         self.sock.sendall(message.encode('utf8'))
         self.messageInput.setPlainText('')
