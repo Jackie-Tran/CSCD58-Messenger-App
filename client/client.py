@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import socket
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication, QMainWindow, QListWidget
 from clientUI import ClientWindow
 import sys
@@ -60,7 +61,8 @@ def handlePresence(sock: socket.socket, root: etree._ElementTree, window: QMainW
     if status == 'ONLINE':
         usersList.addItem(user)
     elif status == 'OFFLINE':
-        pass
+        for u in usersList.findItems(user, Qt.MatchFlag.MatchContains):
+            usersList.takeItem(usersList.row(u))
     else:
         print('unexpected status value')
 
@@ -73,7 +75,6 @@ def removeNameSpace(tag: str) -> str:
 def parseXML(sock: socket.socket, xml: bytes, window: QMainWindow, jid: str):
     parser = etree.XMLParser(encoding='utf-8', recover=True)
     newXml = "<root>"+xml.decode('utf-8')+"</root>"
-    print(newXml)
     if xml.decode('utf-8') == '</stream:stream>':
         sock.close()
         return

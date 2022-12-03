@@ -86,8 +86,6 @@ def sendUserList(sock: socket.socket):
             fromJID=jid)
         print(xml)
         sock.sendall(xml.encode('utf-8'))
-    xml = "<presence from='jimmy@localhost/desktop'><status>ONLINE</status></presence>"
-    sock.sendall(xml.encode('utf-8'))
 
 
 def getJIDOfSocket(sock: socket.socket):
@@ -103,10 +101,10 @@ def parseXML(sock: socket.socket, xml: bytes):
     if xml.decode('utf-8') == '</stream:stream>':
         # client is closing the stream
         broadcastPresence(sock, getJIDOfSocket(sock), 'OFFLINE')
-        # for conn in xmlStreams:
-        #     if conn[1] == sock:
-        #         xmlStreams.remove(conn)
-        #         break
+        for conn in xmlStreams:
+            if conn[1] == sock:
+                xmlStreams.remove(conn)
+                break
         sock.sendall(b'</stream:stream>')
         return
     root: etree._ElementTree = etree.parse(BytesIO(xml), parser)
