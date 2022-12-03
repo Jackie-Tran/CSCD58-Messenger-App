@@ -59,3 +59,9 @@ Plan
     - body: message content
   - `<iq />`
   - `<prescence />`
+    ```xml
+        <presence from='romeo@example.net/orchard' xml:lang='en'>
+            <show>dnd</show>
+            <status>Wooing Juliet</status>
+        </presence>
+    ```

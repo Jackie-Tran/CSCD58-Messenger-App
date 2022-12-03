@@ -41,15 +41,32 @@ def broadcastMessage(sock: socket.socket, sender: str, messageBody: str):
         s.sendall(message.encode('utf-8'))
 
 
+def broacastPresence(sock: socket.socket, sender: str, status: str):
+    # broadcast sender's status to rest of the clients
+    for jid, s in xmlStreams:
+        if s == sock:
+            # we don't need to update the sender about its own status
+            continue
+        xml = "<presence from='{fromJID}'><status>ONLINE</status></presence>".format(
+            fromJID=sender)
+    s.sendall(xml.encode('utf-8'))
+
+
 def handleMessage(sock: socket.socket, root: etree._Element):
     src = root.attrib['from']
     dest = root.attrib['to']
     body: etree._Element = root.find('body')
     messageText = body.text
-    # TODO: update message logs
+    # TODO: update message logs so that new clients are up to date
     # send update to rest of the connected clients
     print(messageText)
     broadcastMessage(sock, src, messageText)
+
+
+def handlePresence(sock: socket.socket, root: etree._Element):
+    statusElement: etree._Element = root.find('status')
+    status = statusElement.text
+    # we need to broadcast the new status to the other clients
 
 
 def removeNameSpace(tag: str) -> str:
@@ -70,6 +87,9 @@ def parseXML(sock: socket.socket, xml: bytes):
     elif rootTag == 'message':
         # client has sent a message stanza
         handleMessage(sock, rootElement)
+    elif rootTag == 'presence':
+        # client is updating their presence
+        handlePresence(sock, rootElement)
 
 
 def handleClientSocket(clientsocket: socket.socket, address):

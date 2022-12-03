@@ -73,41 +73,6 @@ text-decoration: underline;</string>
        <property name="styleSheet">
         <string notr="true">font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
        </property>
-       <item>
-        <property name="text">
-         <string>Jackie</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Jimmy</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Derek</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Michaekl</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Eirkin</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Ben</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Jeff</string>
-        </property>
-       </item>
       </widget>
      </item>
     </layout>

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import socket
-from PyQt6.QtWidgets import QApplication, QMainWindow
+from PyQt6.QtWidgets import QApplication, QMainWindow, QListWidget
 from clientUI import ClientWindow
 import sys
 from threading import Thread
@@ -22,7 +22,7 @@ def openStream(sock: socket.socket, fromJID: str, to: str):
           version='1.0'
           xml:lang='en'
           xmlns='jabber:client'
-          xmlns:stream='http://etherx.jabber.org/streams'>""".format(fromJID=JID, toJID=HOST)
+          xmlns:stream='http://etherx.jabber.org/streams'>""".format(fromJID=fromJID, toJID=to)
     sock.sendall(xml.encode('utf-8'))
 
 
@@ -38,8 +38,30 @@ def startGUI(s: socket.socket, jid: str):
     app.exec()
 
 
-def handleStreamResponse(sock: socket.socket):
-    print('xml stream is now open!')
+def handleStreamResponse(sock: socket.socket, window, jid: str):
+    # notify other clients that we are online by sending a presence stanza
+    xml = """<presence from='{fromJID}'>
+        <status>ONLINE</status>
+        </presence>""".format(fromJID=jid)
+    sock.sendall(xml.encode('utf-8'))
+    # update user list
+    usersList: QListWidget = window.findChild(QListWidget, 'usersList')
+    usersList.addItem(jid + ' (You)')
+
+
+def handlePresence(sock: socket.socket, root: etree._Element, window: QMainWindow):
+    print('handling presence')
+    usersList: QListWidget = window.findChild(QListWidget, 'usersList')
+    user = root.attrib['from']
+    statusElement: etree._Element = user.find('status')
+    status = statusElement.text
+    # update the online users list
+    if status == 'ONLINE':
+        usersList.addItem(user)
+    elif status == 'OFFLINE':
+        pass
+    else:
+        print('unexpected status value')
 
 
 def removeNameSpace(tag: str) -> str:
@@ -47,29 +69,29 @@ def removeNameSpace(tag: str) -> str:
     return tagRegex.search(tag).group(2)
 
 
-def parseXML(sock: socket.socket, xml: bytes):
+def parseXML(sock: socket.socket, xml: bytes, window: QMainWindow, jid: str):
     parser = etree.XMLParser(encoding='utf-8', recover=True)
     print(xml.decode('utf-8'))
     root: etree._ElementTree = etree.parse(BytesIO(xml), parser)
     rootElement: etree._Element = root.getroot()
     rootTag = removeNameSpace(rootElement.tag)
-
+    print(rootTag)
     if rootTag == 'stream':
         # server has responded to our stream response
-        handleStreamResponse(sock)
+        handleStreamResponse(sock, window, jid)
+    elif rootTag == 'message':
+        print('got a message')
+    elif rootTag == 'presence':
+        handlePresence(sock, rootElement, window)
 
 
-def recv(s: socket.socket):
+def recv(s: socket.socket, window: QMainWindow, jid: str):
     if not s:
         return
     while True:
-        try:
-            data = s.recv(1024)
-            parseXML(s, data)
-            if not data:
-                break
-        except:
-            print('socket error in recv thread')
+        data = s.recv(1024)
+        parseXML(s, data, window, jid)
+        if not data:
             break
     # do i need to close the socket here?
 
@@ -84,8 +106,10 @@ if __name__ == '__main__':
     JID = BARE_JID + '/' + RESOURCE
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((HOST, PORT))
-
-    recvThread = Thread(target=recv, args=(s,))
+    app = QApplication(sys.argv)
+    window: QMainWindow = ClientWindow(s, JID)
+    window.show()
+    recvThread = Thread(target=recv, args=(s, window, JID,))
     try:
         recvThread.start()
     except:
@@ -94,5 +118,7 @@ if __name__ == '__main__':
 
     # Setup XMPP
     openStream(s, JID, HOST)
-    startGUI(s, JID)
+
+    app.exec()
+    # startGUI(s, JID)
     s.close()
