@@ -1,7 +1,7 @@
 import socket
 from typing import List
 from lxml import etree
-from io import BytesIO
+from io import StringIO
 import re
 from threading import Thread
 
@@ -97,7 +97,7 @@ def getJIDOfSocket(sock: socket.socket):
 
 def parseXML(sock: socket.socket, xml: bytes):
     parser = etree.XMLParser(encoding='utf-8', recover=True)
-    print(xml.decode('utf-8'))
+    newXml = "<root>"+xml.decode('utf-8')+"</root>"
     if xml.decode('utf-8') == '</stream:stream>':
         # client is closing the stream
         broadcastPresence(sock, getJIDOfSocket(sock), 'OFFLINE')
@@ -107,22 +107,25 @@ def parseXML(sock: socket.socket, xml: bytes):
                 break
         sock.sendall(b'</stream:stream>')
         return
-    root: etree._ElementTree = etree.parse(BytesIO(xml), parser)
+    root: etree._ElementTree = etree.parse(StringIO(newXml), parser)
     rootElement: etree._Element = root.getroot()
-    print(rootElement)
-    rootTag = removeNameSpace(rootElement.tag)
+    children = rootElement.getchildren()
 
-    if rootTag == 'stream':
-        # client is attempting to open a xml stream
-        handleStreamRequest(sock, rootElement)
-        # send users on the server
-        sendUserList(sock)
-    elif rootTag == 'message':
-        # client has sent a message stanza
-        handleMessage(sock, rootElement)
-    elif rootTag == 'presence':
-        # client is updating their presence
-        handlePresence(sock, rootElement)
+    for child in children:
+        if not type(child) is etree._Element:
+            continue
+        childTag = removeNameSpace(child.tag)
+        if childTag == 'stream':
+            # client is attempting to open a xml stream
+            handleStreamRequest(sock, child)
+            # send users on the server
+            sendUserList(sock)
+        elif childTag == 'message':
+            # client has sent a message stanza
+            handleMessage(sock, child)
+        elif childTag == 'presence':
+            # client is updating their presence
+            handlePresence(sock, child)
 
 
 def handleClientSocket(clientsocket: socket.socket, address):
