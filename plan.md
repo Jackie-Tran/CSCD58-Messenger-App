@@ -5,8 +5,8 @@ Types of communication:
 - Group chats
 
 Plan
-- [ ] Create client and server applications
-- [ ] Test sending data over socket
+- [x] Create client and server applications
+- [x] Test sending data over socket
 - [ ] Implement a variation of the XMPP protocol
   - [ ] Open send and recieve xml streams
   - [ ] Handle message, presence, iq stanzas
