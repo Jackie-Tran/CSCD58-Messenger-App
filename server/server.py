@@ -41,7 +41,7 @@ def broadcastMessage(sock: socket.socket, sender: str, messageBody: str):
         s.sendall(message.encode('utf-8'))
 
 
-def broacastPresence(sock: socket.socket, sender: str, status: str):
+def broadcastPresence(sock: socket.socket, sender: str, status: str):
     # broadcast sender's status to rest of the clients
     for jid, s in xmlStreams:
         if s == sock:
@@ -49,7 +49,7 @@ def broacastPresence(sock: socket.socket, sender: str, status: str):
             continue
         xml = "<presence from='{fromJID}'><status>ONLINE</status></presence>".format(
             fromJID=sender)
-    s.sendall(xml.encode('utf-8'))
+        s.sendall(xml.encode('utf-8'))
 
 
 def handleMessage(sock: socket.socket, root: etree._Element):
@@ -64,9 +64,13 @@ def handleMessage(sock: socket.socket, root: etree._Element):
 
 
 def handlePresence(sock: socket.socket, root: etree._Element):
+    src = root.attrib['from']
+    print(src)
     statusElement: etree._Element = root.find('status')
     status = statusElement.text
+    print(status)
     # we need to broadcast the new status to the other clients
+    broadcastPresence(sock, src, status)
 
 
 def removeNameSpace(tag: str) -> str:

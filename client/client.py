@@ -53,7 +53,8 @@ def handlePresence(sock: socket.socket, root: etree._Element, window: QMainWindo
     print('handling presence')
     usersList: QListWidget = window.findChild(QListWidget, 'usersList')
     user = root.attrib['from']
-    statusElement: etree._Element = user.find('status')
+    print(user)
+    statusElement: etree._Element = root.find('status')
     status = statusElement.text
     # update the online users list
     if status == 'ONLINE':
