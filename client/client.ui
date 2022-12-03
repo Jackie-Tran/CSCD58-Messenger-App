@@ -73,41 +73,6 @@ text-decoration: underline;</string>
        <property name="styleSheet">
         <string notr="true">font: 12pt &quot;MS Shell Dlg 2&quot;;</string>
        </property>
-       <item>
-        <property name="text">
-         <string>Jackie</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Jimmy</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Derek</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Michaekl</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Eirkin</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Ben</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Jeff</string>
-        </property>
-       </item>
       </widget>
      </item>
     </layout>
@@ -127,22 +92,6 @@ text-decoration: underline;</string>
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
-    <widget class="QLabel" name="usersOnlineLabel_2">
-     <property name="geometry">
-      <rect>
-       <x>350</x>
-       <y>20</y>
-       <width>281</width>
-       <height>39</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">font: 75 24pt &quot;MS Shell Dlg 2&quot;;</string>
-     </property>
-     <property name="text">
-      <string>CSCD58 Chat Room</string>
-     </property>
-    </widget>
     <widget class="QWidget" name="horizontalLayoutWidget">
      <property name="geometry">
       <rect>
@@ -198,6 +147,90 @@ text-decoration: underline;</string>
         <property name="text">
          <string>Send</string>
         </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="verticalLayoutWidget_2">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>961</width>
+       <height>581</height>
+      </rect>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="spacing">
+       <number>8</number>
+      </property>
+      <property name="leftMargin">
+       <number>16</number>
+      </property>
+      <property name="topMargin">
+       <number>16</number>
+      </property>
+      <property name="rightMargin">
+       <number>16</number>
+      </property>
+      <property name="bottomMargin">
+       <number>16</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="titleLabel">
+        <property name="styleSheet">
+         <string notr="true">font: 75 24pt &quot;MS Shell Dlg 2&quot;;</string>
+        </property>
+        <property name="text">
+         <string>CSCD58 Chat Room</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QScrollArea" name="chatArea">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="layoutDirection">
+         <enum>Qt::LeftToRight</enum>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background-color: rgb(255, 255, 255);</string>
+        </property>
+        <property name="verticalScrollBarPolicy">
+         <enum>Qt::ScrollBarAsNeeded</enum>
+        </property>
+        <property name="horizontalScrollBarPolicy">
+         <enum>Qt::ScrollBarAsNeeded</enum>
+        </property>
+        <property name="sizeAdjustPolicy">
+         <enum>QAbstractScrollArea::AdjustToContents</enum>
+        </property>
+        <property name="widgetResizable">
+         <bool>true</bool>
+        </property>
+        <widget class="QWidget" name="scrollAreaWidgetContents">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>927</width>
+           <height>500</height>
+          </rect>
+         </property>
+        </widget>
        </widget>
       </item>
      </layout>
