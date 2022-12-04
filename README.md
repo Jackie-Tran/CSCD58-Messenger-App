@@ -1,28 +1,11 @@
-# CSCD58 Final Project - Client Server Messenger App
+# CSCD58 Final Project - Client Server Chat Room
 
-## Description and Rationale
+## How to run
 
-For my final project I wanted to create a client server messenger app. Once the client and server programs are setup, I want to show how one may intercept these packets and read the messages being sent.
+Server
 
-After we discover the security flaws of the program, I will show various encryption methods and show how they can protect us from these mallicious attacks.
+`docker run -d --rm --name server -p 8080:8080 messenger-server`
 
-Some encryption algorithms I might explore:
+Client
 
-- Triple DES
-- RSA
-- Twofish
-- AES 
-- Diffie-Hellman?
-
-## Goals and Targets
-
-- [ ] Client and Server Application
-- [ ] Show how someone can intercept the packets (Wireshark demo?)
-- [ ] Encryption
-
-## How this relates to "Computer Networks"
-
-Obviously in chat/messenger applications, packets are being sent between users. But when the server recieves a message from a user, it needs to figure out who to send the packet to which is something I wanted to look into.
-Another aspect of computer networks is security and how we can prevent mallicious users from reading the data in the packets. 
-
-This project will explore how the packets get routed and the security component of networks. I'm not sure how technically difficult this project would be considered as so feedback on that would be appreciated (is this too easy or too hard).
+`docker run -d --rm --name client -p 8080:8080 messenger-client`

@@ -7,9 +7,9 @@ Types of communication:
 Plan
 - [x] Create client and server applications
 - [x] Test sending data over socket
-- [ ] Implement a variation of the XMPP
-  - [ ] Open send and recieve xml streams
-  - [ ] Handle message, presence, iq stanzas
+- [x] Implement a variation of the XMPP
+  - [x] Open send and recieve xml streams
+  - [x] Handle message, presence, iq stanzas
 - [ ] Demo to show how packets can be intercepted
 - [ ] Implement security/encryption
 
