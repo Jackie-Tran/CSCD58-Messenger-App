@@ -10,7 +10,7 @@ from lxml import etree
 from io import StringIO
 import re
 
-HOST = 'localhost'
+HOST = '192.168.56.1'
 PORT = 8080
 
 

@@ -27,6 +27,7 @@ def handleStreamRequest(sock: socket.socket, req: etree._Element):
           xml:lang='en'
           xmlns='jabber:client'
           xmlns:stream='http://etherx.jabber.org/streams'>""".format(fromJID='localhost', toJID=req.attrib['from'])
+    print(xml)
     sock.sendall(xml.encode('utf-8'))
 
 
@@ -149,11 +150,12 @@ if __name__ == '__main__':
     # create an INET, STREAMing socket
     serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # bind the socket to a public host and a port
-    print(socket.gethostname())
-    serverSocket.bind(('localhost', 8080))
+    host = socket.gethostbyname(socket.gethostname())
+    print(host)
+    serverSocket.bind((host, 8080))
     # become a server socket
     serverSocket.listen(5)
-    serverSocket.settimeout(10)
+    # serverSocket.settimeout(10)
 
     while True:
         # accept connections from outside
