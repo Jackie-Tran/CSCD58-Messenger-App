@@ -2,10 +2,10 @@ import os
 import socket
 import typing
 from PyQt6 import uic, QtGui, QtWidgets, QtCore
-from PyQt6.QtWidgets import QMainWindow, QPushButton, QPlainTextEdit, QScrollArea, QLabel, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QMainWindow, QPushButton, QPlainTextEdit, QScrollArea, QLabel, QVBoxLayout, QWidget, QSizePolicy
 
 
-class MessageBubble(QtWidgets.QWidget):
+class MessageWidget(QtWidgets.QWidget):
     """
     Custom QtWidget to display a message from a user
     """
@@ -13,6 +13,16 @@ class MessageBubble(QtWidgets.QWidget):
     def __init__(self, message: str, sender: str, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         layout = QtWidgets.QVBoxLayout()
+
+        # add label for user
+        userText = QLabel()
+        userText.setText(sender)
+        userText.setAlignment(
+            QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignTop)
+        userText.setStyleSheet('font: 500 12pt "MS Shell Dlg 2";')
+        layout.addWidget(userText)
+
+        # message label
         messageText = QLabel()
         messageText.setText(message)
         messageText.setAlignment(
@@ -20,6 +30,9 @@ class MessageBubble(QtWidgets.QWidget):
         messageText.setStyleSheet('font: 12pt "MS Shell Dlg 2";')
         layout.addWidget(messageText)
         self.setLayout(layout)
+        self.setMinimumHeight(0)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding,
+                           QSizePolicy.Policy.Fixed)
 
 
 class ClientWindow(QMainWindow):
@@ -35,13 +48,17 @@ class ClientWindow(QMainWindow):
             QPlainTextEdit, 'messageInput')
         self.setWindowTitle("CSCD58 Chat Room - " + jid)
         self.chatArea: QScrollArea = self.findChild(QScrollArea, 'chatArea')
+        chatAreaScrollBar = self.chatArea.verticalScrollBar()
+        chatAreaScrollBar.rangeChanged.connect(
+            lambda: chatAreaScrollBar.setValue(chatAreaScrollBar.maximum()))
         self.chatAreaContents = self.findChild(QWidget, 'chatAreaContents')
-        self.layout = QVBoxLayout()
-        print(self.chatAreaContents)
-        for i in range(50):
-            messageBubble = MessageBubble("hello world {i}".format(i=i), jid)
-            self.layout.addWidget(messageBubble)
-        self.chatAreaContents.setLayout(self.layout)
+        self.chatAreaLayout = QVBoxLayout()
+        self.chatAreaLayout.setAlignment(QtCore.Qt.AlignmentFlag.AlignBottom)
+        self.chatAreaContents.setLayout(self.chatAreaLayout)
+
+    def addMessage(self, message: str, sender: str):
+        messageWidget = MessageWidget(message, sender)
+        self.chatAreaLayout.addWidget(messageWidget)
 
     def closeEvent(self, e: QtGui.QCloseEvent) -> None:
         xml = "</stream:stream>"
@@ -54,5 +71,6 @@ class ClientWindow(QMainWindow):
         text = self.messageInput.toPlainText().strip()
         message = "<message from='{fromJID}' to='{toJID}'><body>{messageBody}</body></message>".format(
             fromJID=jid, toJID='localhost', messageBody=text)
+        self.addMessage(text, jid)
         self.sock.sendall(message.encode('utf8'))
         self.messageInput.setPlainText('')
