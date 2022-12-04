@@ -36,6 +36,8 @@ class MessageWidget(QtWidgets.QWidget):
 
 
 class ClientWindow(QMainWindow):
+    messageSignal = QtCore.pyqtSignal(str, str, name='messageSignal')
+
     def __init__(self, s: socket.socket, jid: str):
         super().__init__()
         self.sock = s
@@ -56,6 +58,11 @@ class ClientWindow(QMainWindow):
         self.chatAreaLayout.setAlignment(QtCore.Qt.AlignmentFlag.AlignBottom)
         self.chatAreaContents.setLayout(self.chatAreaLayout)
 
+        self.messageSignal.connect(self.addMessage)
+
+    def emitMessageSignal(self, message: str, sender: str):
+        self.messageSignal.emit(message, sender)
+
     def addMessage(self, message: str, sender: str):
         messageWidget = MessageWidget(message, sender)
         self.chatAreaLayout.addWidget(messageWidget)
@@ -71,6 +78,7 @@ class ClientWindow(QMainWindow):
         text = self.messageInput.toPlainText().strip()
         message = "<message from='{fromJID}' to='{toJID}'><body>{messageBody}</body></message>".format(
             fromJID=jid, toJID='localhost', messageBody=text)
-        self.addMessage(text, jid)
+        # self.addMessage(text, jid)
+        self.emitMessageSignal(text, jid)
         self.sock.sendall(message.encode('utf8'))
         self.messageInput.setPlainText('')

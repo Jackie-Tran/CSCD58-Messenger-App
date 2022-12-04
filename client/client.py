@@ -33,13 +33,13 @@ def closeStream(sock: socket.socket, fromJID: str, to: str):
 
 def startGUI(s: socket.socket, jid: str):
     app = QApplication(sys.argv)
-    window: QMainWindow = ClientWindow(s, jid)
+    window: ClientWindow = ClientWindow(s, jid)
     window.show()
 
     app.exec()
 
 
-def handleStreamResponse(sock: socket.socket, window, jid: str):
+def handleStreamResponse(sock: socket.socket, window: ClientWindow, jid: str):
     # notify other clients that we are online by sending a presence stanza
     xml = """<presence from='{fromJID}'>
         <status>ONLINE</status>
@@ -50,7 +50,16 @@ def handleStreamResponse(sock: socket.socket, window, jid: str):
     usersList.addItem(jid + ' (You)')
 
 
-def handlePresence(sock: socket.socket, root: etree._ElementTree, window: QMainWindow):
+def handleMessage(window: ClientWindow, root: etree._Element):
+    print('handle message')
+    src = root.attrib['from']
+    dest = root.attrib['to']
+    body: etree._Element = root.find('body')
+    messageText = body.text
+    window.emitMessageSignal(messageText, src)
+
+
+def handlePresence(sock: socket.socket, root: etree._ElementTree, window: ClientWindow):
     print('handling presence')
     usersList: QListWidget = window.findChild(QListWidget, 'usersList')
     user = root.attrib['from']
@@ -72,9 +81,10 @@ def removeNameSpace(tag: str) -> str:
     return tagRegex.search(tag).group(2)
 
 
-def parseXML(sock: socket.socket, xml: bytes, window: QMainWindow, jid: str):
+def parseXML(sock: socket.socket, xml: bytes, window: ClientWindow, jid: str):
     parser = etree.XMLParser(encoding='utf-8', recover=True)
     newXml = "<root>"+xml.decode('utf-8')+"</root>"
+    print(newXml)
     if xml.decode('utf-8') == '</stream:stream>':
         sock.close()
         return
@@ -89,12 +99,12 @@ def parseXML(sock: socket.socket, xml: bytes, window: QMainWindow, jid: str):
             # server has responded to our stream response
             handleStreamResponse(sock, window, jid)
         elif childTag == 'message':
-            print('got a message')
+            handleMessage(window, child)
         elif childTag == 'presence':
             handlePresence(sock, child, window)
 
 
-def recv(s: socket.socket, window: QMainWindow, jid: str):
+def recv(s: socket.socket, window: ClientWindow, jid: str):
     while True:
         if not s or s.fileno() == -1:
             break
@@ -116,7 +126,7 @@ if __name__ == '__main__':
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((HOST, PORT))
     app = QApplication(sys.argv)
-    window: QMainWindow = ClientWindow(s, JID)
+    window = ClientWindow(s, JID)
     window.show()
     recvThread = Thread(target=recv, args=(s, window, JID,))
     try:
