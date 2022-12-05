@@ -202,8 +202,10 @@ class XMPPServer(XMPPEntity):
 
 
 class XMPPClient(XMPPEntity):
-    def __init__(self, local: str, domain: str, resource: str, ClientUI: any) -> None:
+    def __init__(self, local: str, domain: str, resource: str, server: str, port: int, ClientUI: any) -> None:
         super().__init__(local, domain, resource)
+        self.server = server
+        self.port = port
         self.ClientUI = ClientUI
         self.window: any = None
 
@@ -211,11 +213,9 @@ class XMPPClient(XMPPEntity):
         print('-----Starting Client Application-----')
         if len(sys.argv) < 2:
             print("missing arg")
-        HOST = '192.168.56.1'
-        PORT = 8080
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((HOST, PORT))
+        s.connect((self.server, self.port))
         app = QApplication(sys.argv)
         self.window = self.ClientUI(s, self.JID)
         self.window.show()
@@ -227,7 +227,7 @@ class XMPPClient(XMPPEntity):
             recvThread.join()
 
         # Setup XMPP
-        self.openStream(s, self.JID, HOST)
+        self.openStream(s, self.JID, self.server)
 
         # Start the UI
         app.exec()
