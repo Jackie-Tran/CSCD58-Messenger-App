@@ -5,6 +5,7 @@ from io import StringIO
 import re
 from lxml import etree
 import sys
+import ssl
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication, QMainWindow, QListWidget
 
@@ -87,12 +88,19 @@ class XMPPServer(XMPPEntity):
         serverSocket.listen(5)
         serverSocket.settimeout(10)
 
+        # TLS/SSL
+        context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        context.load_cert_chain(certfile='../rootCA.pem',
+                                keyfile='../rootCA.key')
+
         while True:
             # accept connections from outside
             (clientsocket, address) = serverSocket.accept()
             if clientsocket:
+                secureSocket = ssl.wrap_socket(
+                    clientsocket, server_side=True, keyfile='../rootCA.key', certfile='../rootCA.pem')
                 clientThread = Thread(target=self.handleClientSocket,
-                                      args=(clientsocket, address, ))
+                                      args=(secureSocket, address, ))
                 try:
                     clientThread.start()
                 except:
@@ -214,12 +222,16 @@ class XMPPClient(XMPPEntity):
         if len(sys.argv) < 2:
             print("missing arg")
 
+        context = ssl.create_default_context()
+        context.load_verify_locations('./rootCA.pem')
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((self.server, self.port))
+        secureSocket = ssl.wrap_socket(
+            s, keyfile='./rootCA.key', certfile='./rootCA.pem')
+        secureSocket.connect((self.server, self.port))
         app = QApplication(sys.argv)
-        self.window = self.ClientUI(s, self.JID)
+        self.window = self.ClientUI(secureSocket, self.JID)
         self.window.show()
-        recvThread = Thread(target=self.recv, args=(s,))
+        recvThread = Thread(target=self.recv, args=(secureSocket,))
         try:
             recvThread.start()
         except:
@@ -227,7 +239,7 @@ class XMPPClient(XMPPEntity):
             recvThread.join()
 
         # Setup XMPP
-        self.openStream(s, self.JID, self.server)
+        self.openStream(secureSocket, self.JID, self.server)
 
         # Start the UI
         app.exec()
