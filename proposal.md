@@ -16,7 +16,7 @@ Some encryption algorithms I might explore:
 
 ## Goals and Targets
 
-- [ ] Client and Server Application
+- [x] Client and Server Application
 - [ ] Show how someone can intercept the packets (Wireshark demo?)
 - [ ] Encryption
 

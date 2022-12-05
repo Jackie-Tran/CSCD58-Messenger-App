@@ -36,19 +36,26 @@ class MessageWidget(QtWidgets.QWidget):
 
 
 class ClientWindow(QMainWindow):
+    # custom signal to notify when a message needs to be added to the chat
     messageSignal = QtCore.pyqtSignal(str, str, name='messageSignal')
 
     def __init__(self, s: socket.socket, jid: str):
         super().__init__()
         self.sock = s
         pathToUI = os.path.dirname(__file__) + '\client.ui'
+        print(pathToUI)
         uic.loadUi(pathToUI, self)
+        self.setWindowTitle("CSCD58 Chat Room - " + jid)
+        self.initWidgets(jid)
+
+    def initWidgets(self, jid: str):
         self.sendButton: QPushButton = self.findChild(
             QPushButton, 'sendButton')
         self.sendButton.clicked.connect(lambda: self.onSendButtonClicked(jid))
+
         self.messageInput: QPlainTextEdit = self.findChild(
             QPlainTextEdit, 'messageInput')
-        self.setWindowTitle("CSCD58 Chat Room - " + jid)
+
         self.chatArea: QScrollArea = self.findChild(QScrollArea, 'chatArea')
         chatAreaScrollBar = self.chatArea.verticalScrollBar()
         chatAreaScrollBar.rangeChanged.connect(
