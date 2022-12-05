@@ -4,6 +4,9 @@ from threading import Thread
 from io import StringIO
 import re
 from lxml import etree
+import sys
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QApplication, QMainWindow, QListWidget
 
 
 class JID:
@@ -196,3 +199,102 @@ class XMPPServer(XMPPEntity):
                 fromJID=jid)
             print(xml)
             sock.sendall(xml.encode('utf-8'))
+
+
+class XMPPClient(XMPPEntity):
+    def __init__(self, local: str, domain: str, resource: str, ClientUI: any) -> None:
+        super().__init__(local, domain, resource)
+        self.ClientUI = ClientUI
+        self.window: any = None
+
+    def start(self):
+        print('-----Starting Client Application-----')
+        if len(sys.argv) < 2:
+            print("missing arg")
+        HOST = '192.168.56.1'
+        PORT = 8080
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((HOST, PORT))
+        app = QApplication(sys.argv)
+        self.window = self.ClientUI(s, self.JID)
+        self.window.show()
+        recvThread = Thread(target=self.recv, args=(s,))
+        try:
+            recvThread.start()
+        except:
+            print('Error: unable to start thread')
+            recvThread.join()
+
+        # Setup XMPP
+        self.openStream(s, self.JID, HOST)
+
+        # Start the UI
+        app.exec()
+
+    def recv(self, s: socket.socket):
+        while True:
+            if not s or s.fileno() == -1:
+                break
+            data = s.recv(1024)
+            self.parseXML(s, data)
+            if not data:
+                break
+
+    def openStream(self, sock: socket.socket, fromJID: str, to: str):
+        print('opening stream')
+        xml = """<?xml version='1.0'?>
+        <stream:stream
+            from='{fromJID}'
+            to='{toJID}'
+            version='1.0'
+            xml:lang='en'
+            xmlns='jabber:client'
+            xmlns:stream='http://etherx.jabber.org/streams'>""".format(fromJID=fromJID, toJID=to)
+        sock.sendall(xml.encode('utf-8'))
+
+    def closeStream(self, sock: socket.socket):
+        xml = "</stream:stream>"
+        sock.sendall(xml.encode('utf-8'))
+
+    def handleStreamRequest(self, sock: socket.socket, root: etree._Element):
+        print('handle stream response')
+        # notify other clients that we are online by sending a presence stanza
+        xml = """<presence from='{fromJID}'>
+            <status>ONLINE</status>
+            </presence>""".format(fromJID=self.JID)
+        sock.sendall(xml.encode('utf-8'))
+        # update user list
+        usersList: QListWidget = self.window.findChild(
+            QListWidget, 'usersList')
+        usersList.addItem(self.JID + ' (You)')
+
+    def handleStreamClose(self, sock: socket.socket):
+        super().handleStreamClose(sock)
+        self.closeStream(sock)
+        sock.close()
+
+    def handleMessage(self, sock: socket.socket, root: etree._Element):
+        print('handle message')
+        src = root.attrib['from']
+        dest = root.attrib['to']
+        body: etree._Element = root.find('body')
+        messageText = body.text
+        self.window.emitMessageSignal(messageText, src)
+
+    def handlePresence(self, sock: socket.socket, root: etree._Element):
+        print('handling presence')
+        usersList: QListWidget = self.window.findChild(
+            QListWidget, 'usersList')
+        user = root.attrib['from']
+        print(user)
+        statusElement: etree._Element = root.find('status')
+        status = statusElement.text
+        # update the online users list
+        if status == 'ONLINE':
+            usersList.addItem(user)
+        elif status == 'OFFLINE':
+            for u in usersList.findItems(user, Qt.MatchFlag.MatchContains):
+                usersList.takeItem(usersList.row(u))
+        else:
+            print('unexpected status value')
