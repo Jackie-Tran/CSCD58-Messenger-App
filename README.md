@@ -95,7 +95,13 @@ After XMPP has opened the streams, the server will then send `<features/>` eleme
 
 In my implmentation, TLS can already be established before the stream opens to ensure security and encryption so these features steps are not required. Using python's `ssl` library we can wrap a socket in a SSL Context.
 
-## Limitations of My Implementation
+## Analysis
+
+### Results
+
+In the end, I was able to create a working chat room using XMPP and TLS encryption. With my implementation of the XMPP, I am able to send messages and presence stanzas between the server and clients and use this data to update the UI on the client side. So... pretty good! (But could still use more work...)
+
+### Limitations of My Implementation
 
 I tried my best to follow the specifications of the XMPP and although the chat room does work, there are some limitations. 
 
