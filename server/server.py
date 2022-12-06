@@ -158,5 +158,5 @@ if __name__ == '__main__':
                         help='Run server with TLS')
     args = parser.parse_args()
     server = XMPPServer('', socket.gethostbyname(socket.gethostname()), '', int(
-        args.port if args.port else DEFAULT_PORT))
+        args.port if args.port else DEFAULT_PORT), args.tls)
     server.start()
