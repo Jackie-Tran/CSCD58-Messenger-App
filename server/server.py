@@ -21,7 +21,10 @@ class XMPPServer(XMPPEntity):
         self.xmlStreams: List[tuple[str, socket.socket]] = []
 
     def start(self):
-        print("-----Starting Server Application-----")
+        if self.tlsEnabled:
+            print('-----Starting Server Application (TLS Enabled)-----')
+        else:
+            print('-----Starting Server Application-----')
         # create an INET, STREAMing socket
         serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # bind the socket to a public host and a port
