@@ -5,7 +5,7 @@ For my final project, I created a chat room application using my attempt at an i
 ## Goals
 
 - [x] Client and Server Application
-- [x] Show how someone can intercept the packets (Wireshark demo?)
+- [x] Show how someone can intercept the packet
 - [x] Encryption
 
 ## How to Run
@@ -18,14 +18,6 @@ pip install -r requirements.txt
 python ./server.py
 ```
 
-or using Docker
-
-```bash
-cd server
-docker build --tag cscd58-server .
-docker run cscd58-server
-```
-
 ### Client
 
 **NOTE**: The UI of the client application uses PyQt6. Make sure this is installed on your machine. There seems to be issues with installing PyQt6 on M1.
@@ -33,7 +25,17 @@ docker run cscd58-server
 ```bash
 cd client
 pip install -r requirements.txt
-python ./client.py jackie localhost
+python ./client.py NAME SERVER_ADDRESS
+```
+
+If you want to run with TLS/SSL, you first have to generate and sign the certificates and keys. I used OpenSSL. Make sure these are located at the root of the project.
+
+```bash
+openssl genrsa -out rootCA.key 2048
+openssl req -x509 -new -nodes -key rootCA.key -sha256 -out rootCA.pem
+openssl genrsa -out device.key 2048
+openssl req -new -key device.key -out device.csr
+openssl x509 -req -in device.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateserial -out device.crt -sha256
 ```
 
 ## Implementation
@@ -101,12 +103,10 @@ I tried my best to follow the specifications of the XMPP and although the chat r
   - Since the server and client will only recieve 1024 bytes of data each time, it could be the case that an XML element being sent could exceed 1024 bytes in size. In this case, only part of the XML data is sent in the stream and the server and client won't be able to parse it properly. For example, to get the list of online users, the server will send a message stanza for each online user to the connecting client (ideally this would be done with a iq stanza). If the number of online users is too large, the client may not be able to parse all the data properly. A possible fix to this would be to create a custom recv function that will constantly accept data from the socket until we have valid XML data and then return it so we can parse.
 - Lack of error handling
   - There is little error handling in my implementation. Users could pass bad XML data and it would cause the program to exit. Ideally, we would send XML error elements to the stream but since I have made sure that the data being sent is proper XML, it wasn't an issue in this project. But, this is definitley something that needs to be implemented in the future.
+- No Authentication
+  - There is no way for the server and client to authenticate who they are talking to. When a client joins the server, they can make their name whatever they want and send messages as that person. 
 
 
 ## Conclusion
 
-Building a protocol is hard. There are a lot of things that you need to consider in order to have a working end-to-end protocol. 
-- concluding remarks, lessons learned.
-- thought it was going to be easy but later learned about the different protocols
-- specifications were very detailed
-- learned about XMPP popular
+Building a protocol is hard. There are a lot of things that you need to consider in order to have a working end-to-end protocol. That being said, I learned a lot about the protocols used in messaging apps while doing research for this project. I found about many different protocols used for messaging but XMPP was one of the most used protocols when it comes to messenger apps and attempting to implement it myself helped me learn a lot about it. Since XMPP is so widely used, the specifications are very specific but also quite large and so implementing the entire protocol on my own might have been out of reach for a solo project. I also realized that managing authentication and encryption can become tricky when dealing with many entities as we somehow need a way to manage all the public and private keys. This led me to use python's ssl library to handle the encryption part.
