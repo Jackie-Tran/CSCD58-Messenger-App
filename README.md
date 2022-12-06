@@ -5,7 +5,7 @@ For my final project, I created a chat room application using my attempt at an i
 ## Goals
 
 - [x] Client and Server Application
-- [x] Show how someone can intercept the packets (Wireshark demo?)
+- [x] Show how someone can intercept the packet
 - [x] Encryption
 
 ## How to Run
@@ -25,7 +25,7 @@ python ./server.py
 ```bash
 cd client
 pip install -r requirements.txt
-python ./client.py jackie localhost
+python ./client.py NAME SERVER_ADDRESS
 ```
 
 If you want to run with TLS/SSL, you first have to generate and sign the certificates and keys. I used OpenSSL. Make sure these are located at the root of the project.
