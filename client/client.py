@@ -16,23 +16,24 @@ DEFAULT_PORT = '8080'
 
 
 class XMPPClient(XMPPEntity):
-    def __init__(self, local: str, domain: str, resource: str, server: str, port: int, ClientUI: any) -> None:
+    def __init__(self, local: str, domain: str, resource: str, port: int, tlsEnabled: bool, ClientUI: any) -> None:
         super().__init__(local, domain, resource)
-        self.server = server
+        self.server = domain
         self.port = port
+        self.tlsEnabled = tlsEnabled
         self.ClientUI = ClientUI
         self.window: any = None
 
     def start(self):
-        print('-----Starting Client Application-----')
-        if len(sys.argv) < 2:
-            print("missing arg")
+        if self.tlsEnabled:
+            print('-----Starting Client Application (TLS Enabled)-----')
+        else:
+            print('-----Starting Client Application-----')
 
-        context = ssl.create_default_context()
-        context.load_verify_locations('./rootCA.pem')
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # s = ssl.wrap_socket(
-        #     s, keyfile='./rootCA.key', certfile='./rootCA.pem')
+        if self.tlsEnabled:
+            s = ssl.wrap_socket(
+                s, keyfile='./device.key', certfile='./device.crt')
         s.connect((self.server, self.port))
         app = QApplication(sys.argv)
         self.window = self.ClientUI(s, self.JID)
@@ -124,7 +125,9 @@ if __name__ == '__main__':
     parser.add_argument("-n", "--name", help="Name of the user")
     parser.add_argument('-s', '--server', help='Location of the server')
     parser.add_argument('-p', '--port', nargs='?', help='Port of the server')
+    parser.add_argument('-t', '--tls', action='store_true',
+                        help='Run client with TLS')
     args = parser.parse_args()
-    client = XMPPClient(args.name, socket.gethostbyname(
-        socket.gethostname()), 'desktop', args.server, int(args.port if args.port else DEFAULT_PORT), ClientWindow)
+    client = XMPPClient(args.name, args.server, 'desktop', int(
+        args.port if args.port else DEFAULT_PORT), args.tls, ClientWindow)
     client.start()

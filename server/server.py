@@ -14,9 +14,10 @@ DEFAULT_PORT = '8080'
 
 
 class XMPPServer(XMPPEntity):
-    def __init__(self, local: str, domain: str, resource: str, port=8080) -> None:
+    def __init__(self, local: str, domain: str, resource: str, port, tlsEnabled: bool) -> None:
         super().__init__(local, domain, resource)
         self.port = port
+        self.tlsEnabled = tlsEnabled
         self.xmlStreams: List[tuple[str, socket.socket]] = []
 
     def start(self):
@@ -29,19 +30,15 @@ class XMPPServer(XMPPEntity):
         serverSocket.bind((host, self.port))
         # become a server socket
         serverSocket.listen(5)
-        serverSocket.settimeout(10)
-
-        # TLS/SSL
-        context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-        context.load_cert_chain(certfile='../rootCA.pem',
-                                keyfile='../rootCA.key')
+        # serverSocket.settimeout(10)
 
         while True:
             # accept connections from outside
             (clientsocket, address) = serverSocket.accept()
             if clientsocket:
-                # clientsocket = ssl.wrap_socket(
-                #     clientsocket, server_side=True, keyfile='../rootCA.key', certfile='../rootCA.pem')
+                if self.tlsEnabled:
+                    clientsocket = ssl.wrap_socket(
+                        clientsocket, server_side=True, keyfile='../rootCA.key', certfile='../rootCA.pem')
                 clientThread = Thread(target=self.handleClientSocket,
                                       args=(clientsocket, address, ))
                 try:
@@ -157,6 +154,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Server application for CSCD58 group chat')
     parser.add_argument('-p', '--port', nargs='?', help='Port of the server')
+    parser.add_argument('-t', '--tls', action='store_true',
+                        help='Run server with TLS')
     args = parser.parse_args()
     server = XMPPServer('', socket.gethostbyname(socket.gethostname()), '', int(
         args.port if args.port else DEFAULT_PORT))
