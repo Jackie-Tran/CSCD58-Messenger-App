@@ -38,7 +38,7 @@ class XMPPServer(XMPPEntity):
             if clientsocket:
                 if self.tlsEnabled:
                     clientsocket = ssl.wrap_socket(
-                        clientsocket, server_side=True, keyfile='../rootCA.key', certfile='../rootCA.pem')
+                        clientsocket, server_side=True, keyfile='./rootCA.key', certfile='./rootCA.pem')
                 clientThread = Thread(target=self.handleClientSocket,
                                       args=(clientsocket, address, ))
                 try:
