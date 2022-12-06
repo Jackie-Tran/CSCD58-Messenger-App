@@ -5,16 +5,16 @@ Types of communication:
 - Group chats
 
 Plan
-- [ ] Create client and server applications
-- [ ] Test sending data over socket
-- [ ] Implement a variation of the XMPP protocol
-  - [ ] Open send and recieve xml streams
-  - [ ] Handle message, presence, iq stanzas
+- [x] Create client and server applications
+- [x] Test sending data over socket
+- [x] Implement a variation of the XMPP
+  - [x] Open send and recieve xml streams
+  - [x] Handle message, presence, iq stanzas
 - [ ] Demo to show how packets can be intercepted
 - [ ] Implement security/encryption
 
 
-## Custom XMPP Protocol
+## Custom XMPP
 - Jabber ID (JID)
   - jackie@cscd58.utoronto.ca/desktop
   - local part defines the account on the server
@@ -59,3 +59,9 @@ Plan
     - body: message content
   - `<iq />`
   - `<prescence />`
+    ```xml
+        <presence from='romeo@example.net/orchard' xml:lang='en'>
+            <show>dnd</show>
+            <status>Wooing Juliet</status>
+        </presence>
+    ```
